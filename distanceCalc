@@ -1,0 +1,64 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from geopy.distance import geodesic
+
+
+# Use a relative file path to load the CSV file
+file_path = 'my_env/2022-03-21 02_00_00+00_00.csv'
+df = pd.read_csv(file_path)
+
+
+# Ensure timestamp is in datetime format
+df['timestamp'] = pd.to_datetime(df['UTC time'])
+
+
+# Plotting the location coordinates (latitude vs longitude)
+#plt.figure(figsize=(10, 6))
+#plt.plot(df['longitude'], df['latitude'], marker='o', linestyle='-', color='b')
+
+
+#plt.title('Path Based on GPS Coordinates')
+#plt.xlabel('Longitude')
+#plt.ylabel('Latitude')
+#plt.grid(True)
+#plt.show()
+
+# Function to calculate the distance between two points
+def haversine_distance(lat1, lon1, lat2, lon2):
+   point1 = (lat1, lon1)
+   point2 = (lat2, lon2)
+   return geodesic(point1, point2).meters
+
+
+# Create shifted latitude and longitude for distance calculation
+lat_shifted = df['latitude'].shift(-1)
+lon_shifted = df['longitude'].shift(-1)
+
+
+# Calculate the distance between consecutive points
+df['distance'] = df.apply(
+   lambda row: haversine_distance(row['latitude'], row['longitude'], lat_shifted[row.name], lon_shifted[row.name])
+   if pd.notnull(lat_shifted[row.name]) and pd.notnull(lon_shifted[row.name]) else 0,
+   axis=1
+)
+
+
+# Calculate the total distance
+total_distance = df['distance'].sum()  # in meters
+print(f"Total distance traveled: {total_distance / 1000:.2f} km")
+
+
+# Calculate time differences in seconds
+df['time_diff'] = df['timestamp'].diff().shift(-1).dt.total_seconds()
+
+
+# Calculate speed in km/h
+df['speed'] = df.apply(
+   lambda row: (row['distance'] / row['time_diff']) * 3.6 if row['time_diff'] > 0 else 0,
+   axis=1
+)
+
+
+# Calculate the average speed
+average_speed = df['speed'].mean()
+print(f"Average speed: {average_speed:.2f} km/h")
