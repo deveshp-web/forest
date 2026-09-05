@@ -1,0 +1,10 @@
+n_pairs	33
+pearson_r	0.2624
+p_value	0.1402
+mean_bias_h	-15.5859
+mae_h	15.5859
+n_pairs_normalized	33
+pearson_r_normalized	0.4711
+p_value_normalized	0.0057
+mean_bias_prop	-0.0150
+mae_prop	0.1698
